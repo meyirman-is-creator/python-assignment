@@ -35,7 +35,7 @@ services:
     networks:
       - lost_and_found_network
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Changed from 5432:5432 to avoid port conflict
 
   minio:
     image: minio/minio
