@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заявка на возврат - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="page-title">
+        {% if item.status == 'LOST' %}
+            Я нашел эту вещь
+        {% else %}
+            Это моя вещь
+        {% endif %}
+    </h1>
+    
+    <div class="item-summary mb-4">
+        <div class="item-summary-header">
+            <h3>{{ item.title }}</h3>
+            <span class="badge badge-{{ item.status|lower }}">{{ item.get_status_display }}</span>
+        </div>
+        
+        <div class="item-summary-details">
+            <div class="item-summary-image">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                {% else %}
+                    <img src="{% static 'img/placeholder.jpg' %}" alt="No image">
+                {% endif %}
+            </div>
+            
+            <div class="item-summary-info">
+                <p><strong>Категория:</strong> {{ item.category.name }}</p>
+                <p><strong>Местоположение:</strong> {{ item.location.name }}</p>
+                <p><strong>Дата:</strong> {{ item.date_lost_found }}</p>
+                <p><strong>Автор:</strong> {{ item.user.username }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" class="needs-validation claim-form" novalidate>
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="description" class="form-label">
+                {% if item.status == 'LOST' %}
+                    Опишите, где вы нашли эту вещь и как ее можно вернуть*
+                {% else %}
+                    Объясните, почему вы считаете, что эта вещь принадлежит вам*
+                {% endif %}
+            </label>
+            <textarea id="description" name="description" class="form-control" rows="5" required></textarea>
+            <div class="invalid-feedback">
+                Пожалуйста, заполните это поле.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="contact_info" class="form-label">Контактная информация*</label>
+            <input type="text" id="contact_info" name="contact_info" class="form-control" required>
+            <div class="form-text">
+                Укажите, как владелец может связаться с вами (телефон, email и т.д.)
+            </div>
+            <div class="invalid-feedback">
+                Пожалуйста, укажите контактную информацию.
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Отправить заявку</button>
+            <a href="{% url 'item_detail' item.id %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

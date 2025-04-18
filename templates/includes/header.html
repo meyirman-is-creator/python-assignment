@@ -1,0 +1,46 @@
+<header class="header">
+    <div class="container header-container">
+        <div class="logo">
+            <a href="{% url 'home' %}">Lost and Found</a>
+        </div>
+        
+        <button id="menu-toggle" class="menu-toggle d-md-none">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        
+        <nav id="nav-menu" class="nav">
+            <a href="{% url 'home' %}" class="nav-link">Главная</a>
+            <a href="{% url 'item_list' %}?status=LOST" class="nav-link">Потерянные</a>
+            <a href="{% url 'item_list' %}?status=FOUND" class="nav-link">Найденные</a>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'item_create' %}" class="nav-link">Добавить объявление</a>
+                <div class="nav-link notification-container">
+                    <a href="#" id="notification-bell" class="notification-bell">
+                        <span class="icon">🔔</span>
+                        {% if unread_notifications_count > 0 %}
+                            <span id="notification-counter" class="notification-counter">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                    <div id="notification-dropdown" class="notification-dropdown">
+                        {% include 'includes/notifications.html' %}
+                    </div>
+                </div>
+                <div class="nav-link user-menu">
+                    <a href="{% url 'profile' %}">{{ user.username }}</a>
+                    <div class="user-dropdown">
+                        <a href="{% url 'profile' %}">Профиль</a>
+                        <a href="{% url 'my_items' %}">Мои объявления</a>
+                        <a href="{% url 'my_claims' %}">Мои заявки</a>
+                        <a href="{% url 'logout' %}">Выход</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-link">Вход</a>
+                <a href="{% url 'register' %}" class="nav-link">Регистрация</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>

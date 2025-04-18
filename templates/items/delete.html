@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление объявления - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-confirmation">
+        <h1 class="page-title">Удаление объявления</h1>
+        
+        <div class="alert alert-warning">
+            <p><strong>Внимание!</strong> Вы собираетесь удалить объявление <strong>"{{ item.title }}"</strong>.</p>
+            <p>Это действие нельзя будет отменить.</p>
+        </div>
+        
+        <div class="item-summary">
+            <h3>Информация об объявлении:</h3>
+            <ul>
+                <li><strong>Название:</strong> {{ item.title }}</li>
+                <li><strong>Статус:</strong> {{ item.get_status_display }}</li>
+                <li><strong>Категория:</strong> {{ item.category.name }}</li>
+                <li><strong>Дата создания:</strong> {{ item.created_at|date:"d.m.Y H:i" }}</li>
+            </ul>
+            
+            {% if item.image %}
+                <div class="item-image">
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}" style="max-width: 300px;">
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="delete-actions">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Да, удалить объявление</button>
+                <a href="{% url 'item_detail' item.id %}" class="btn btn-secondary">Нет, вернуться назад</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

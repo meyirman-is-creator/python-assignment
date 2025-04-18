@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="400" viewBox="0 0 500 400">
+  <style>
+    .text { font-family: Arial, sans-serif; font-weight: bold; }
+    .large-text { font-size: 120px; }
+    .medium-text { font-size: 24px; }
+    .primary { fill: #4a6fa5; }
+    .secondary { fill: #6cb4af; }
+    .accent { fill: #f7c562; }
+  </style>
+  
+  <!-- Background shapes -->
+  <circle cx="150" cy="200" r="120" fill="#f1f1f1" />
+  <rect x="250" y="100" width="200" height="200" rx="20" fill="#f8f8f8" />
+  
+  <!-- Lost item icon -->
+  <g transform="translate(120, 180)">
+    <circle cx="30" cy="30" r="25" fill="#ffffff" stroke="#4a6fa5" stroke-width="3" />
+    <path d="M30,20 L30,30 L40,35" stroke="#4a6fa5" stroke-width="3" stroke-linecap="round" fill="none" />
+    <circle cx="30" cy="15" r="2" fill="#4a6fa5" />
+    <circle cx="30" cy="30" r="2" fill="#4a6fa5" />
+  </g>
+  
+  <!-- Magnifying glass -->
+  <g transform="translate(300, 180)">
+    <circle cx="25" cy="25" r="20" fill="none" stroke="#6cb4af" stroke-width="3" />
+    <line x1="40" y1="40" x2="60" y2="60" stroke="#6cb4af" stroke-width="3" stroke-linecap="round" />
+  </g>
+  
+  <!-- Text -->
+  <text x="250" y="100" class="text large-text primary" text-anchor="middle">404</text>
+  <text x="250" y="300" class="text medium-text secondary" text-anchor="middle">Страница не найдена</text>
+  <text x="250" y="330" class="text medium-text accent" text-anchor="middle">¯\_(ツ)_/¯</text>
+</svg>

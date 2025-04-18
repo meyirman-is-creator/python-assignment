@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои объявления - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="my-items-container">
+    <div class="my-items-header">
+        <h1 class="page-title">Мои объявления</h1>
+        <a href="{% url 'item_create' %}" class="btn btn-primary">Добавить объявление</a>
+    </div>
+    
+    <div class="filter-section">
+        <div class="filter-group">
+            <label>Фильтр по статусу:</label>
+            <div class="filter-options">
+                <a href="{% url 'my_items' %}" class="filter-option {% if not status %}active{% endif %}">Все</a>
+                <a href="{% url 'my_items' %}?status=LOST" class="filter-option {% if status == 'LOST' %}active{% endif %}">Потерянные</a>
+                <a href="{% url 'my_items' %}?status=FOUND" class="filter-option {% if status == 'FOUND' %}active{% endif %}">Найденные</a>
+                <a href="{% url 'my_items' %}?status=CLAIMED" class="filter-option {% if status == 'CLAIMED' %}active{% endif %}">С заявками</a>
+                <a href="{% url 'my_items' %}?status=RETURNED" class="filter-option {% if status == 'RETURNED' %}active{% endif %}">Возвращенные</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="items-container">
+        {% for item in items %}
+            <div class="card item-card">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-image">
+                {% else %}
+                    <img src="{% static 'img/placeholder.jpg' %}" alt="No image" class="item-image">
+                {% endif %}
+                
+                <div class="card-body item-details">
+                    <div class="item-header">
+                        <h3 class="card-title">{{ item.title }}</h3>
+                        <span class="badge badge-{{ item.status|lower }}">{{ item.get_status_display }}</span>
+                    </div>
+                    
+                    <p class="card-text">{{ item.description|truncatewords:20 }}</p>
+                    
+                    <div class="item-meta">
+                        <p><strong>Категория:</strong> {{ item.category.name }}</p>
+                        <p><strong>Местоположение:</strong> {{ item.location.name }}</p>
+                        <p><strong>Дата:</strong> {{ item.date_lost_found }}</p>
+                        <p><strong>Создано:</strong> {{ item.created_at|date:"d.m.Y" }}</p>
+                    </div>
+                    
+                    <div class="item-stats">
+                        <span class="item-stat"><i class="icon-comment"></i> Комментариев: {{ item.comments.count }}</span>
+                        <span class="item-stat"><i class="icon-claim"></i> Заявок: {{ item.claims.count }}</span>
+                    </div>
+                    
+                    <div class="item-actions">
+                        <a href="{% url 'item_detail' item.id %}" class="btn btn-primary">Подробнее</a>
+                        <a href="{% url 'item_edit' item.id %}" class="btn btn-secondary">Редактировать</a>
+                        <a href="{% url 'item_delete' item.id %}" class="btn btn-danger">Удалить</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <p>У вас пока нет объявлений</p>
+                <a href="{% url 'item_create' %}" class="btn btn-primary mt-2">Разместить объявление</a>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if items.has_other_pages %}
+        <div class="pagination">
+            <span class="step-links">
+                {% if items.has_previous %}
+                    <a href="?page=1{% if status %}&status={{ status }}{% endif %}" class="pagination-link">&laquo; Первая</a>
+                    <a href="?page={{ items.previous_page_number }}{% if status %}&status={{ status }}{% endif %}" class="pagination-link">Предыдущая</a>
+                {% endif %}
+
+                <span class="current-page">
+                    Страница {{ items.number }} из {{ items.paginator.num_pages }}
+                </span>
+
+                {% if items.has_next %}
+                    <a href="?page={{ items.next_page_number }}{% if status %}&status={{ status }}{% endif %}" class="pagination-link">Следующая</a>
+                    <a href="?page={{ items.paginator.num_pages }}{% if status %}&status={{ status }}{% endif %}" class="pagination-link">Последняя &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

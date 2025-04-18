@@ -1,0 +1,21 @@
+{% if notifications %}
+    <div class="notifications-list">
+        {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" data-id="{{ notification.id }}">
+                <div class="notification-title">{{ notification.title }}</div>
+                <div class="notification-message">{{ notification.message }}</div>
+                <div class="notification-time">{{ notification.created_at|timesince }} назад</div>
+            </div>
+        {% endfor %}
+        
+        {% if unread_notifications_count > 0 %}
+            <div class="notification-actions">
+                <a href="{% url 'mark_all_read' %}" class="mark-all-read">Отметить все как прочитанные</a>
+            </div>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="notifications-empty">
+        <p>У вас нет новых уведомлений</p>
+    </div>
+{% endif %}

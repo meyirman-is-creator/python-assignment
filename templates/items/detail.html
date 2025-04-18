@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ item.title }} - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="item-detail">
+    <div class="breadcrumbs mb-3">
+        <a href="{% url 'home' %}">Главная</a> &gt;
+        <a href="{% url 'item_list' %}">Объявления</a> &gt;
+        <span>{{ item.title }}</span>
+    </div>
+    
+    <div class="item-detail-container">
+        <div class="item-detail-image-container">
+            {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-detail-image">
+            {% else %}
+                <img src="{% static 'img/placeholder.jpg' %}" alt="No image" class="item-detail-image">
+            {% endif %}
+        </div>
+        
+        <div class="item-detail-info">
+            <div class="item-detail-header">
+                <h1 class="item-detail-title">{{ item.title }}</h1>
+                <span class="badge badge-{{ item.status|lower }} badge-lg">{{ item.get_status_display }}</span>
+            </div>
+            
+            <div class="item-detail-meta">
+                <p><strong>Категория:</strong> {{ item.category.name }}</p>
+                <p><strong>Местоположение:</strong> {{ item.location.name }}</p>
+                <p><strong>Дата потери/находки:</strong> {{ item.date_lost_found }}</p>
+                <p><strong>Автор:</strong> {{ item.user.username }}</p>
+                <p><strong>Опубликовано:</strong> {{ item.created_at }}</p>
+                
+                {% if item.contact_info %}
+                    <p><strong>Контактная информация:</strong> {{ item.contact_info }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="item-detail-description">
+                <h3>Описание</h3>
+                <p>{{ item.description }}</p>
+            </div>
+            
+            <div class="item-detail-actions">
+                {% if user.is_authenticated %}
+                    {% if user == item.user %}
+                        <a href="{% url 'item_edit' item.id %}" class="btn btn-primary">Редактировать</a>
+                        <a href="{% url 'item_delete' item.id %}" class="btn btn-danger" onclick="return confirm('Вы уверены, что хотите удалить это объявление?')">Удалить</a>
+                    {% else %}
+                        {% if item.status == 'LOST' %}
+                            <a href="{% url 'claim_create' item.id %}" class="btn btn-accent">Я нашел эту вещь!</a>
+                        {% elif item.status == 'FOUND' %}
+                            <a href="{% url 'claim_create' item.id %}" class="btn btn-accent">Это моя вещь!</a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Войдите, чтобы связаться с автором</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {% if item.location.latitude and item.location.longitude %}
+        <div class="item-location mt-4">
+            <h3>Местоположение</h3>
+            <div id="map" class="map" 
+                 data-latitude="{{ item.location.latitude }}" 
+                 data-longitude="{{ item.location.longitude }}"
+                 data-title="{{ item.title }}"
+                 data-status="{{ item.get_status_display }}"
+                 data-url="{{ request.path }}">
+            </div>
+        </div>
+    {% endif %}
+    
+    {% if user.is_authenticated and item.user == user %}
+        <div class="item-claims mt-4">
+            <h3>Заявки на возврат ({{ claims.count }})</h3>
+            
+            {% if claims %}
+                <div class="claims-list">
+                    {% for claim in claims %}
+                        <div class="claim-card">
+                            <div class="claim-header">
+                                <span class="claim-author">{{ claim.user.username }}</span>
+                                <span class="claim-date">{{ claim.created_at|timesince }} назад</span>
+                                {% if claim.is_approved %}
+                                    <span class="badge badge-success">Одобрена</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">На рассмотрении</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="claim-body">
+                                <p>{{ claim.description }}</p>
+                                <p><strong>Контакты:</strong> {{ claim.contact_info }}</p>
+                            </div>
+                            
+                            <div class="claim-actions">
+                                {% if not claim.is_approved %}
+                                    <form action="{% url 'claim_approve' claim.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">Одобрить</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>Пока нет заявок на возврат.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    <div class="item-comments mt-4">
+        <h3>Комментарии ({{ comments.count }})</h3>
+        
+        {% if comments %}
+            <div class="comments-list">
+                {% for comment in comments %}
+                    <div class="comment-card">
+                        <div class="comment-header">
+                            <span class="comment-author">{{ comment.user.username }}</span>
+                            <span class="comment-date">{{ comment.created_at|timesince }} назад</span>
+                        </div>
+                        
+                        <div class="comment-body">
+                            <p>{{ comment.text }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Пока нет комментариев.</p>
+        {% endif %}
+        
+        {% if user.is_authenticated %}
+            <div class="comment-form mt-3">
+                <h4>Оставить комментарий</h4>
+                <form action="{% url 'comment_create' item.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea name="text" id="comment-text" class="form-control" rows="3" placeholder="Ваш комментарий..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            </div>
+        {% else %}
+            <p>
+                <a href="{% url 'login' %}?next={{ request.path }}">Войдите</a>, чтобы оставить комментарий.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if item.location.latitude and item.location.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mapElement = document.getElementById('map');
+    if (mapElement) {
+        const lat = parseFloat(mapElement.dataset.latitude);
+        const lng = parseFloat(mapElement.dataset.longitude);
+        const title = mapElement.dataset.title;
+        const status = mapElement.dataset.status;
+        const url = mapElement.dataset.url;
+        
+        const map = L.map('map').setView([lat, lng], 15);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup(`
+            <strong>${title}</strong><br>
+            Статус: ${status}
+        `).openPopup();
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
