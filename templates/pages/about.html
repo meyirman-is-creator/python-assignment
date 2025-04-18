@@ -5,56 +5,104 @@
 
 {% block content %}
 <div class="about-container">
-    <h1 class="page-title">О нас</h1>
-    
+    <h1 class="page-title text-center mb-5">О нас</h1>
+
     <div class="about-content">
-        <section class="about-section">
-            <h2>Наша миссия</h2>
-            <p>Сервис Lost and Found создан для того, чтобы помочь людям находить свои потерянные вещи и возвращать найденные предметы их владельцам. Мы стремимся сделать процесс поиска и возврата потерянных вещей максимально простым и удобным.</p>
-            <p>Наша цель — создать сообщество взаимопомощи, где каждый может рассчитывать на поддержку в трудную минуту, когда потеряна важная вещь.</p>
-        </section>
-        
-        <section class="about-section">
-            <h2>Как это работает</h2>
-            <div class="steps-container">
-                <div class="step-card">
-                    <div class="step-icon">📝</div>
-                    <h3>Шаг 1: Регистрация</h3>
-                    <p>Создайте учетную запись, чтобы получить доступ ко всем функциям сервиса. Регистрация бесплатна и занимает всего пару минут.</p>
-                </div>
-                
-                <div class="step-card">
-                    <div class="step-icon">📢</div>
-                    <h3>Шаг 2: Публикация объявления</h3>
-                    <p>Создайте подробное объявление о потерянной или найденной вещи. Добавьте фотографию и укажите место, где вещь была потеряна или найдена.</p>
-                </div>
-                
-                <div class="step-card">
-                    <div class="step-icon">🔍</div>
-                    <h3>Шаг 3: Поиск или ожидание</h3>
-                    <p>Ищите подходящие объявления или ждите, когда кто-то отзовется на ваше объявление. Система уведомлений мгновенно сообщит вам о новых комментариях или заявках.</p>
-                </div>
-                
-                <div class="step-card">
-                    <div class="step-icon">🤝</div>
-                    <h3>Шаг 4: Возврат вещи</h3>
-                    <p>Договоритесь о возврате вещи и завершите процесс. Отметьте объявление как решенное, чтобы помочь другим пользователям.</p>
+        <section class="about-section card mb-5">
+            <div class="card-body">
+                <h2 class="mb-4">Наша миссия</h2>
+                <div class="row">
+                    <div class="col-md-8">
+                        <p>Сервис Lost and Found создан для того, чтобы помочь людям находить свои потерянные вещи и возвращать найденные предметы их владельцам. Мы стремимся сделать процесс поиска и возврата потерянных вещей максимально простым и удобным.</p>
+                        <p>Наша цель — создать сообщество взаимопомощи, где каждый может рассчитывать на поддержку в трудную минуту, когда потеряна важная вещь.</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mission-icon">
+                            <div style="font-size: 80px; color: var(--primary-color);">🔍</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
-        
-        <section class="about-section">
-            <h2>Наша команда</h2>
-            <p>Мы — небольшая команда энтузиастов, которые верят в силу взаимопомощи и добрых дел. Наш сервис создан с любовью и заботой о пользователях.</p>
-            <p>Если у вас есть вопросы или предложения, не стесняйтесь связаться с нами через форму обратной связи или по указанным контактам.</p>
+
+        <section class="about-section mb-5">
+            <h2 class="text-center mb-4">Как это работает</h2>
+            <div class="steps-container">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="step-card card h-100">
+                            <div class="card-body text-center">
+                                <div class="step-icon mb-3">📝</div>
+                                <h3>Шаг 1: Регистрация</h3>
+                                <p>Создайте учетную запись, чтобы получить доступ ко всем функциям сервиса. Регистрация бесплатна и занимает всего пару минут.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="step-card card h-100">
+                            <div class="card-body text-center">
+                                <div class="step-icon mb-3">📢</div>
+                                <h3>Шаг 2: Публикация объявления</h3>
+                                <p>Создайте подробное объявление о потерянной или найденной вещи. Добавьте фотографию и укажите место, где вещь была потеряна или найдена.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="step-card card h-100">
+                            <div class="card-body text-center">
+                                <div class="step-icon mb-3">🔍</div>
+                                <h3>Шаг 3: Поиск или ожидание</h3>
+                                <p>Ищите подходящие объявления или ждите, когда кто-то отзовется на ваше объявление. Система уведомлений мгновенно сообщит вам о новых комментариях или заявках.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="step-card card h-100">
+                            <div class="card-body text-center">
+                                <div class="step-icon mb-3">🤝</div>
+                                <h3>Шаг 4: Возврат вещи</h3>
+                                <p>Договоритесь о возврате вещи и завершите процесс. Отметьте объявление как решенное, чтобы помочь другим пользователям.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-        
-        <section class="about-section contact-section">
-            <h2>Контактная информация</h2>
-            <div class="contact-info">
-                <p><strong>Email:</strong> info@lostandfound.example.com</p>
-                <p><strong>Телефон:</strong> +7 (123) 456-78-90</p>
-                <p><strong>Адрес:</strong> г. Москва, ул. Примерная, д. 123</p>
+
+        <section class="about-section card mb-5">
+            <div class="card-body">
+                <h2 class="mb-4">Наша команда</h2>
+                <p>Мы — небольшая команда энтузиастов, которые верят в силу взаимопомощи и добрых дел. Наш сервис создан с любовью и заботой о пользователях.</p>
+                <p>Если у вас есть вопросы или предложения, не стесняйтесь связаться с нами через форму обратной связи или по указанным контактам.</p>
+            </div>
+        </section>
+
+        <section class="contact-section card bg-light">
+            <div class="card-body">
+                <h2 class="mb-4 text-center">Контактная информация</h2>
+                <div class="contact-info row justify-content-center">
+                    <div class="col-md-4">
+                        <div class="contact-item text-center mb-3">
+                            <div class="contact-icon mb-2">📧</div>
+                            <p><strong>Email:</strong> info@lostandfound.example.com</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="contact-item text-center mb-3">
+                            <div class="contact-icon mb-2">📱</div>
+                            <p><strong>Телефон:</strong> +7 (123) 456-78-90</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="contact-item text-center mb-3">
+                            <div class="contact-icon mb-2">📍</div>
+                            <p><strong>Адрес:</strong> г. Москва, ул. Примерная, д. 123</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>

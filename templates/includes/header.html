@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="nav-link user-menu">
-                    <a href="{% url 'profile' %}">{{ user.username }}</a>
+                    <a href="{% url 'profile' %}" class="user-link">{{ user.username }}</a>
                     <div class="user-dropdown">
                         <a href="{% url 'profile' %}">Профиль</a>
                         <a href="{% url 'my_items' %}">Мои объявления</a>
@@ -38,8 +38,8 @@
                     </div>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="nav-link">Вход</a>
-                <a href="{% url 'register' %}" class="nav-link">Регистрация</a>
+                <a href="{% url 'login' %}" class="nav-link btn btn-sm btn-primary">Вход</a>
+                <a href="{% url 'register' %}" class="nav-link btn btn-sm btn-secondary">Регистрация</a>
             {% endif %}
         </nav>
     </div>

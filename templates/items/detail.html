@@ -63,96 +63,102 @@
     </div>
     
     {% if item.location.latitude and item.location.longitude %}
-        <div class="item-location mt-4">
-            <h3>Местоположение</h3>
-            <div id="map" class="map" 
-                 data-latitude="{{ item.location.latitude }}" 
-                 data-longitude="{{ item.location.longitude }}"
-                 data-title="{{ item.title }}"
-                 data-status="{{ item.get_status_display }}"
-                 data-url="{{ request.path }}">
+        <div class="item-location card mt-4">
+            <div class="card-body">
+                <h3 class="mb-3">Местоположение</h3>
+                <div id="map" class="map"
+                     data-latitude="{{ item.location.latitude }}"
+                     data-longitude="{{ item.location.longitude }}"
+                     data-title="{{ item.title }}"
+                     data-status="{{ item.get_status_display }}"
+                     data-url="{{ request.path }}">
+                </div>
             </div>
         </div>
     {% endif %}
-    
+
     {% if user.is_authenticated and item.user == user %}
-        <div class="item-claims mt-4">
-            <h3>Заявки на возврат ({{ claims.count }})</h3>
-            
-            {% if claims %}
-                <div class="claims-list">
-                    {% for claim in claims %}
-                        <div class="claim-card">
-                            <div class="claim-header">
-                                <span class="claim-author">{{ claim.user.username }}</span>
-                                <span class="claim-date">{{ claim.created_at|timesince }} назад</span>
-                                {% if claim.is_approved %}
-                                    <span class="badge badge-success">Одобрена</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">На рассмотрении</span>
-                                {% endif %}
+        <div class="item-claims card mt-4">
+            <div class="card-body">
+                <h3 class="mb-3">Заявки на возврат ({{ claims.count }})</h3>
+
+                {% if claims %}
+                    <div class="claims-list">
+                        {% for claim in claims %}
+                            <div class="claim-card">
+                                <div class="claim-header">
+                                    <span class="claim-author">{{ claim.user.username }}</span>
+                                    <span class="claim-date">{{ claim.created_at|timesince }} назад</span>
+                                    {% if claim.is_approved %}
+                                        <span class="badge badge-success">Одобрена</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">На рассмотрении</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="claim-body">
+                                    <p>{{ claim.description }}</p>
+                                    <p><strong>Контакты:</strong> {{ claim.contact_info }}</p>
+                                </div>
+
+                                <div class="claim-actions">
+                                    {% if not claim.is_approved %}
+                                        <form action="{% url 'claim_approve' claim.id %}" method="post">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm">Одобрить</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
                             </div>
-                            
-                            <div class="claim-body">
-                                <p>{{ claim.description }}</p>
-                                <p><strong>Контакты:</strong> {{ claim.contact_info }}</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>Пока нет заявок на возврат.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="item-comments card mt-4">
+        <div class="card-body">
+            <h3 class="mb-3">Комментарии ({{ comments.count }})</h3>
+
+            {% if comments %}
+                <div class="comments-list">
+                    {% for comment in comments %}
+                        <div class="comment-card">
+                            <div class="comment-header">
+                                <span class="comment-author">{{ comment.user.username }}</span>
+                                <span class="comment-date">{{ comment.created_at|timesince }} назад</span>
                             </div>
-                            
-                            <div class="claim-actions">
-                                {% if not claim.is_approved %}
-                                    <form action="{% url 'claim_approve' claim.id %}" method="post">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success btn-sm">Одобрить</button>
-                                    </form>
-                                {% endif %}
+
+                            <div class="comment-body">
+                                <p>{{ comment.text }}</p>
                             </div>
                         </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <p>Пока нет заявок на возврат.</p>
+                <p>Пока нет комментариев.</p>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <div class="comment-form mt-4">
+                    <h4 class="mb-3">Оставить комментарий</h4>
+                    <form action="{% url 'comment_create' item.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <textarea name="text" id="comment-text" class="form-control" rows="3" placeholder="Ваш комментарий..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Отправить</button>
+                    </form>
+                </div>
+            {% else %}
+                <p class="mt-3">
+                    <a href="{% url 'login' %}?next={{ request.path }}">Войдите</a>, чтобы оставить комментарий.
+                </p>
             {% endif %}
         </div>
-    {% endif %}
-    
-    <div class="item-comments mt-4">
-        <h3>Комментарии ({{ comments.count }})</h3>
-        
-        {% if comments %}
-            <div class="comments-list">
-                {% for comment in comments %}
-                    <div class="comment-card">
-                        <div class="comment-header">
-                            <span class="comment-author">{{ comment.user.username }}</span>
-                            <span class="comment-date">{{ comment.created_at|timesince }} назад</span>
-                        </div>
-                        
-                        <div class="comment-body">
-                            <p>{{ comment.text }}</p>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>Пока нет комментариев.</p>
-        {% endif %}
-        
-        {% if user.is_authenticated %}
-            <div class="comment-form mt-3">
-                <h4>Оставить комментарий</h4>
-                <form action="{% url 'comment_create' item.id %}" method="post">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <textarea name="text" id="comment-text" class="form-control" rows="3" placeholder="Ваш комментарий..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Отправить</button>
-                </form>
-            </div>
-        {% else %}
-            <p>
-                <a href="{% url 'login' %}?next={{ request.path }}">Войдите</a>, чтобы оставить комментарий.
-            </p>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

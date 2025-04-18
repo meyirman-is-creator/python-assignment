@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заявки на возврат - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="claims-list-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">Заявки на возврат</h1>
+
+        <div class="filters">
+            <a href="{% url 'claim_list' %}" class="btn {% if not is_approved %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">Все</a>
+            <a href="{% url 'claim_list' %}?is_approved=1" class="btn {% if is_approved == '1' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">Одобренные</a>
+            <a href="{% url 'claim_list' %}?is_approved=0" class="btn {% if is_approved == '0' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">На рассмотрении</a>
+        </div>
+    </div>
+
+    {% if claims %}
+        <div class="claims-grid">
+            {% for claim in claims %}
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">{{ claim.item.title }}</h4>
+                        <span class="badge {% if claim.is_approved %}badge-success{% else %}badge-secondary{% endif %}">
+                            {% if claim.is_approved %}Одобрена{% else %}На рассмотрении{% endif %}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% if claim.item.image %}
+                                    <img src="{{ claim.item.image.url }}" alt="{{ claim.item.title }}" class="img-fluid rounded mb-3">
+                                {% else %}
+                                    <img src="{% static 'img/placeholder.jpg' %}" alt="No image" class="img-fluid rounded mb-3">
+                                {% endif %}
+
+                                <div class="item-meta">
+                                    <p><strong>Статус объявления:</strong> {{ claim.item.get_status_display }}</p>
+                                    <p><strong>Категория:</strong> {{ claim.item.category.name }}</p>
+                                    <p><strong>Дата потери/находки:</strong> {{ claim.item.date_lost_found }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <h5>Информация о заявке</h5>
+                                <p><strong>От пользователя:</strong> {{ claim.user.username }}</p>
+                                <p><strong>Дата заявки:</strong> {{ claim.created_at }}</p>
+                                <p><strong>Описание:</strong> {{ claim.description }}</p>
+                                <p><strong>Контактная информация:</strong> {{ claim.contact_info }}</p>
+
+                                <div class="claim-actions mt-3">
+                                    <a href="{% url 'item_detail' claim.item.id %}" class="btn btn-primary">Перейти к объявлению</a>
+
+                                    {% if not claim.is_approved %}
+                                        <form action="{% url 'claim_approve' claim.id %}" method="post" class="d-inline-block">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success">Одобрить заявку</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if claims.has_other_pages %}
+            <div class="pagination mt-4">
+                <span class="step-links">
+                    {% if claims.has_previous %}
+                        <a href="?page=1{% if is_approved %}&is_approved={{ is_approved }}{% endif %}" class="pagination-link">&laquo; Первая</a>
+                        <a href="?page={{ claims.previous_page_number }}{% if is_approved %}&is_approved={{ is_approved }}{% endif %}" class="pagination-link">Предыдущая</a>
+                    {% endif %}
+
+                    <span class="current-page">
+                        Страница {{ claims.number }} из {{ claims.paginator.num_pages }}
+                    </span>
+
+                    {% if claims.has_next %}
+                        <a href="?page={{ claims.next_page_number }}{% if is_approved %}&is_approved={{ is_approved }}{% endif %}" class="pagination-link">Следующая</a>
+                        <a href="?page={{ claims.paginator.num_pages }}{% if is_approved %}&is_approved={{ is_approved }}{% endif %}" class="pagination-link">Последняя &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <p>Заявок не найдено</p>
+            <a href="{% url 'item_list' %}" class="btn btn-primary mt-3">Просмотреть объявления</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

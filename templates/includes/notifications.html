@@ -1,13 +1,20 @@
 {% if notifications %}
-    <div class="notifications-list">
-        {% for notification in notifications %}
-            <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" data-id="{{ notification.id }}">
-                <div class="notification-title">{{ notification.title }}</div>
-                <div class="notification-message">{{ notification.message }}</div>
-                <div class="notification-time">{{ notification.created_at|timesince }} назад</div>
-            </div>
-        {% endfor %}
-        
+    <div class="notifications-dropdown-list">
+        <div class="notifications-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Уведомления</h6>
+            <a href="{% url 'notifications' %}" class="view-all-link">Все</a>
+        </div>
+
+        <div class="notifications-scroll">
+            {% for notification in notifications %}
+                <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" data-id="{{ notification.id }}">
+                    <div class="notification-title">{{ notification.title }}</div>
+                    <div class="notification-message">{{ notification.message }}</div>
+                    <div class="notification-time">{{ notification.created_at|timesince }} назад</div>
+                </div>
+            {% endfor %}
+        </div>
+
         {% if unread_notifications_count > 0 %}
             <div class="notification-actions">
                 <a href="{% url 'mark_all_read' %}" class="mark-all-read">Отметить все как прочитанные</a>
@@ -16,6 +23,100 @@
     </div>
 {% else %}
     <div class="notifications-empty">
+        <div class="empty-icon">🔔</div>
         <p>У вас нет новых уведомлений</p>
     </div>
 {% endif %}
+
+<style>
+    .notifications-dropdown-list {
+        padding: 0;
+        width: 320px;
+    }
+
+    .notifications-header {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--gray-200);
+        background-color: var(--gray-100);
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+    }
+
+    .notifications-scroll {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+
+    .notification-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--gray-200);
+        transition: background-color 0.2s;
+        cursor: pointer;
+    }
+
+    .notification-item:hover {
+        background-color: var(--gray-100);
+    }
+
+    .notification-item.unread {
+        background-color: rgba(var(--primary-color-rgb), 0.05);
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .notification-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--gray-800);
+    }
+
+    .notification-message {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin-bottom: 5px;
+    }
+
+    .notification-time {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+
+    .notification-actions {
+        padding: 10px 15px;
+        text-align: center;
+        background-color: var(--gray-100);
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+    }
+
+    .mark-all-read {
+        color: var(--primary-color);
+        font-size: 0.875rem;
+        text-decoration: none;
+    }
+
+    .mark-all-read:hover {
+        text-decoration: underline;
+    }
+
+    .view-all-link {
+        font-size: 0.875rem;
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    .view-all-link:hover {
+        text-decoration: underline;
+    }
+
+    .notifications-empty {
+        padding: 30px 20px;
+        text-align: center;
+        color: var(--gray-500);
+    }
+
+    .empty-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+</style>

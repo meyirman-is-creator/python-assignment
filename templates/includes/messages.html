@@ -1,12 +1,105 @@
 {% if messages %}
 <div class="container messages">
     {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-            <button type="button" class="close-btn" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+        <div class="alert alert-{{ message.tags }} fade-in" role="alert">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    {% if message.tags == 'success' %}
+                        <i class="message-icon">✓</i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        <i class="message-icon">✕</i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="message-icon">⚠</i>
+                    {% elif message.tags == 'info' %}
+                        <i class="message-icon">ℹ</i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+                <button type="button" class="close-btn" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
         </div>
     {% endfor %}
 </div>
+
+<style>
+    .messages {
+        position: fixed;
+        top: 80px;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .alert {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        animation: slide-down 0.3s ease-out;
+    }
+
+    .message-icon {
+        display: inline-block;
+        margin-right: 8px;
+        font-style: normal;
+        font-weight: bold;
+    }
+
+    .close-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.25rem;
+        opacity: 0.5;
+        transition: opacity 0.15s;
+        cursor: pointer;
+        padding: 0 8px;
+    }
+
+    .close-btn:hover {
+        opacity: 1;
+    }
+
+    @keyframes slide-down {
+        0% {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeButtons = document.querySelectorAll('[data-dismiss="alert"]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const alert = this.closest('.alert');
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                alert.style.transition = 'opacity 0.3s, transform 0.3s';
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            });
+        });
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                alert.style.transition = 'opacity 0.3s, transform 0.3s';
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            });
+        }, 5000);
+    });
+</script>
 {% endif %}

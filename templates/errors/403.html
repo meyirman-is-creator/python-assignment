@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Доступ запрещен - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="error-container d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="error-content p-4">
+                        <h1 class="error-title" style="font-size: 5rem; color: var(--warning-color);">403</h1>
+                        <h2 class="error-subtitle mb-3">Доступ запрещен</h2>
+                        <p class="error-description mb-4">У вас нет прав для доступа к запрашиваемой странице.</p>
+                        <div class="error-actions">
+                            <a href="{% url 'home' %}" class="btn btn-primary">На главную</a>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary ml-2">Вернуться назад</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="error-image p-4 text-center">
+                        <div style="font-size: 120px; color: var(--warning-color); line-height: 1;">🔒</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
