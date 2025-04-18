@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if status == 'LOST' %}
+        Потерянные вещи
+    {% elif status == 'FOUND' %}
+        Найденные вещи
+    {% else %}
+        Все объявления
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">
+        {% if status == 'LOST' %}
+            Потерянные вещи
+        {% elif status == 'FOUND' %}
+            Найденные вещи
+        {% else %}
+            Все объявления
+        {% endif %}
+    </h1>
+    
+    <div class="filters">
+        <div class="filter-section">
+            <h3>Фильтр</h3>
+            
+            <div class="filter-group">
+                <label>Статус:</label>
+                <div class="filter-options">
+                    <a href="{% url 'item_list' %}" class="filter-option {% if not status %}active{% endif %}">Все</a>
+                    <a href="{% url 'item_list' %}?status=LOST" class="filter-option {% if status == 'LOST' %}active{% endif %}">Потерянные</a>
+                    <a href="{% url 'item_list' %}?status=FOUND" class="filter-option {% if status == 'FOUND' %}active{% endif %}">Найденные</a>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Категория:</label>
+                <div class="filter-options category-filters">
+                    <a href="#" class="filter-option category-filter active" data-category="all">Все</a>
+                    {% for category in categories %}
+                        <a href="#" class="filter-option category-filter" data-category="{{ category.id }}">{{ category.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label for="sort">Сортировка:</label>
+                <select id="sort" class="form-control sort-select">
+                    <option value="created_at" {% if sort == 'created_at' %}selected{% endif %}>По дате добавления (новые)</option>
+                    <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>По дате добавления (старые)</option>
+                    <option value="date_lost_found" {% if sort == 'date_lost_found' %}selected{% endif %}>По дате события (ранние)</option>
+                    <option value="-date_lost_found" {% if sort == '-date_lost_found' %}selected{% endif %}>По дате события (поздние)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="search-section">
+            <form action="{% url 'item_list' %}" method="get" class="search-form">
+                <input type="text" name="q" placeholder="Поиск..." value="{{ query }}" class="search-input">
+                <button type="submit" class="search-button">Поиск</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="items-container">
+    {% for item in items %}
+        <div class="card item-card" data-category="{{ item.category.id }}">
+            {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-image">
+            {% else %}
+                <img src="{% static 'img/placeholder.jpg' %}" alt="No image" class="item-image">
+            {% endif %}
+            
+            <div class="card-body item-details">
+                <h3 class="card-title">{{ item.title }}</h3>
+                <span class="badge badge-{{ item.status|lower }}">{{ item.get_status_display }}</span>
+                
+                <p class="card-text">{{ item.description|truncatewords:20 }}</p>
+                
+                <div class="item-meta">
+                    <p><strong>Категория:</strong> {{ item.category.name }}</p>
+                    <p><strong>Местоположение:</strong> {{ item.location.name }}</p>
+                    <p><strong>Дата:</strong> {{ item.date_lost_found }}</p>
+                    <p><strong>Автор:</strong> {{ item.user.username }}</p>
+                </div>
+                
+                <div class="item-actions">
+                    <a href="{% url 'item_detail' item.id %}" class="btn btn-primary">Подробнее</a>
+                    {% if item.status == 'LOST' and user.is_authenticated and user != item.user %}
+                        <a href="{% url 'claim_create' item.id %}" class="btn btn-accent">Я нашел!</a>
+                    {% elif item.status == 'FOUND' and user.is_authenticated and user != item.user %}
+                        <a href="{% url 'claim_create' item.id %}" class="btn btn-accent">Это моя вещь!</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="empty-state">
+            <p>Объявлений не найдено</p>
+            <a href="{% url 'item_create' %}" class="btn btn-primary mt-2">Разместить объявление</a>
+        </div>
+    {% endfor %}
+</div>
+
+{% if items.has_other_pages %}
+    <div class="pagination">
+        <span class="step-links">
+            {% if items.has_previous %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-link">&laquo; Первая</a>
+                <a href="?page={{ items.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-link">Предыдущая</a>
+            {% endif %}
+
+            <span class="current-page">
+                Страница {{ items.number }} из {{ items.paginator.num_pages }}
+            </span>
+
+            {% if items.has_next %}
+                <a href="?page={{ items.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-link">Следующая</a>
+                <a href="?page={{ items.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-link">Последняя &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle sorting change
+    const sortSelect = document.querySelector('.sort-select');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('sort', this.value);
+            window.location.href = currentUrl.toString();
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lost and Found - Найдите потерянные вещи!{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1>Нашли или потеряли вещь?</h1>
+        <p>Наш сервис поможет вам найти потерянные вещи или вернуть найденные их владельцам. Публикуйте объявления, ищите и возвращайте потерянное!</p>
+        <div class="hero-actions">
+            <a href="{% url 'item_create' %}" class="btn btn-accent btn-lg">Разместить объявление</a>
+            <a href="{% url 'item_list' %}" class="btn btn-primary btn-lg ml-3">Просмотреть объявления</a>
+        </div>
+    </div>
+</section>
+
+<section class="recent-items mt-5">
+    <div class="container">
+        <h2 class="section-title">Недавние объявления</h2>
+        
+        <div class="items-container">
+            {% for item in recent_items %}
+                <div class="card item-card" data-category="{{ item.category.id }}">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-image">
+                    {% else %}
+                        <img src="{% static 'img/placeholder.jpg' %}" alt="No image" class="item-image">
+                    {% endif %}
+                    
+                    <div class="card-body item-details">
+                        <h3 class="card-title">{{ item.title }}</h3>
+                        <span class="badge badge-{{ item.status|lower }}">{{ item.get_status_display }}</span>
+                        
+                        <p class="card-text">{{ item.description|truncatewords:20 }}</p>
+                        
+                        <div class="item-meta">
+                            <p><strong>Категория:</strong> {{ item.category.name }}</p>
+                            <p><strong>Местоположение:</strong> {{ item.location.name }}</p>
+                            <p><strong>Дата:</strong> {{ item.date_lost_found }}</p>
+                        </div>
+                        
+                        <div class="item-actions">
+                            <a href="{% url 'item_detail' item.id %}" class="btn btn-primary">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <p>Пока нет объявлений. Будьте первым, кто разместит объявление!</p>
+                    <a href="{% url 'item_create' %}" class="btn btn-primary mt-2">Разместить объявление</a>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'item_list' %}" class="btn btn-secondary">Смотреть все объявления</a>
+        </div>
+    </div>
+</section>
+
+<section class="stats mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_items }}</div>
+                    <div class="stat-label">Всего объявлений</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.lost_items }}</div>
+                    <div class="stat-label">Потерянных вещей</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.found_items }}</div>
+                    <div class="stat-label">Найденных вещей</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works mt-5">
+    <div class="container">
+        <h2 class="section-title">Как это работает</h2>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Разместите объявление</h3>
+                    <p>Создайте подробное описание потерянной или найденной вещи с фотографией и местом, где она была потеряна или найдена.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Ожидайте отклик</h3>
+                    <p>Пользователи могут оставлять комментарии или подавать заявки на возврат вещи, если она им принадлежит.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Верните или получите вещь</h3>
+                    <p>Договоритесь о возврате вещи и отметьте объявление как разрешенное после успешного возврата.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

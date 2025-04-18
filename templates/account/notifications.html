@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Уведомления - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h1 class="page-title">Уведомления</h1>
+        
+        {% if notifications %}
+            <form action="{% url 'mark_all_read' %}" method="post" class="mark-all-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Отметить все как прочитанные</button>
+            </form>
+        {% endif %}
+    </div>
+    
+    <div class="filter-section">
+        <div class="filter-group">
+            <label>Фильтр:</label>
+            <div class="filter-options">
+                <a href="{% url 'notifications' %}" class="filter-option {% if not is_read %}active{% endif %}">Все</a>
+                <a href="{% url 'notifications' %}?is_read=0" class="filter-option {% if is_read == '0' %}active{% endif %}">Непрочитанные</a>
+                <a href="{% url 'notifications' %}?is_read=1" class="filter-option {% if is_read == '1' %}active{% endif %}">Прочитанные</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notifications-list">
+        {% for notification in notifications %}
+            <div class="notification-card {% if not notification.is_read %}unread{% endif %}">
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <h3 class="notification-title">{{ notification.title }}</h3>
+                        <span class="notification-time">{{ notification.created_at|timesince }} назад</span>
+                    </div>
+                    
+                    <div class="notification-message">
+                        {{ notification.message }}
+                    </div>
+                    
+                    {% if notification.related_item %}
+                        <div class="notification-related">
+                            <p>Связано с объявлением: <a href="{% url 'item_detail' notification.related_item.id %}">{{ notification.related_item.title }}</a></p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="notification-actions">
+                    {% if notification.related_item %}
+                        <a href="{% url 'item_detail' notification.related_item.id %}" class="btn btn-primary btn-sm">Перейти к объявлению</a>
+                    {% endif %}
+                    
+                    {% if not notification.is_read %}
+                        <a href="{% url 'mark_notification_read' notification.id %}" class="btn btn-secondary btn-sm">Отметить как прочитанное</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <p>У вас нет уведомлений</p>
+                <a href="{% url 'home' %}" class="btn btn-primary mt-2">На главную</a>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if notifications.has_other_pages %}
+        <div class="pagination">
+            <span class="step-links">
+                {% if notifications.has_previous %}
+                    <a href="?page=1{% if is_read %}&is_read={{ is_read }}{% endif %}" class="pagination-link">&laquo; Первая</a>
+                    <a href="?page={{ notifications.previous_page_number }}{% if is_read %}&is_read={{ is_read }}{% endif %}" class="pagination-link">Предыдущая</a>
+                {% endif %}
+
+                <span class="current-page">
+                    Страница {{ notifications.number }} из {{ notifications.paginator.num_pages }}
+                </span>
+
+                {% if notifications.has_next %}
+                    <a href="?page={{ notifications.next_page_number }}{% if is_read %}&is_read={{ is_read }}{% endif %}" class="pagination-link">Следующая</a>
+                    <a href="?page={{ notifications.paginator.num_pages }}{% if is_read %}&is_read={{ is_read }}{% endif %}" class="pagination-link">Последняя &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

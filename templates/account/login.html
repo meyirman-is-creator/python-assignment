@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Вход - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Вход</h1>
+        </div>
+        
+        <div class="auth-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">Имя пользователя</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.username.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Пароль</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.password.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <input type="hidden" name="next" value="{{ next }}">
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">Войти</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="auth-footer">
+            <p>Еще нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

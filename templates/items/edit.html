@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактирование объявления - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="page-title">Редактирование объявления</h1>
+    
+    <form method="post" enctype="multipart/form-data" class="needs-validation item-form" novalidate>
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="title" class="form-label">Название*</label>
+            <input type="text" id="title" name="title" class="form-control" value="{{ item.title }}" required>
+            <div class="invalid-feedback">
+                Пожалуйста, введите название.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="status" class="form-label">Статус*</label>
+            <select id="status" name="status" class="form-control" required>
+                <option value="">Выберите статус</option>
+                <option value="LOST" {% if item.status == 'LOST' %}selected{% endif %}>Потеряно</option>
+                <option value="FOUND" {% if item.status == 'FOUND' %}selected{% endif %}>Найдено</option>
+                <option value="CLAIMED" {% if item.status == 'CLAIMED' %}selected{% endif %}>Подана заявка</option>
+                <option value="RETURNED" {% if item.status == 'RETURNED' %}selected{% endif %}>Возвращено</option>
+            </select>
+            <div class="invalid-feedback">
+                Пожалуйста, выберите статус.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="category" class="form-label">Категория*</label>
+            <select id="category" name="category" class="form-control" required>
+                <option value="">Выберите категорию</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if item.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Пожалуйста, выберите категорию.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="location" class="form-label">Местоположение*</label>
+            <select id="location" name="location" class="form-control" required>
+                <option value="">Выберите местоположение</option>
+                {% for location in locations %}
+                    <option value="{{ location.id }}" {% if item.location.id == location.id %}selected{% endif %}>{{ location.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Пожалуйста, выберите местоположение.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="date_lost_found" class="form-label">Дата потери/находки*</label>
+            <input type="date" id="date_lost_found" name="date_lost_found" class="form-control" value="{{ item.date_lost_found|date:'Y-m-d' }}" required>
+            <div class="invalid-feedback">
+                Пожалуйста, выберите дату.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="description" class="form-label">Описание*</label>
+            <textarea id="description" name="description" class="form-control" rows="5" required>{{ item.description }}</textarea>
+            <div class="invalid-feedback">
+                Пожалуйста, добавьте описание.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="contact_info" class="form-label">Контактная информация</label>
+            <input type="text" id="contact_info" name="contact_info" class="form-control" value="{{ item.contact_info|default:'' }}">
+            <div class="form-text">
+                Укажите, как с вами можно связаться (телефон, email и т.д.)
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="image-upload" class="form-label">Изображение</label>
+            <div class="image-upload-container">
+                <input type="file" id="image-upload" name="image" class="form-control" accept="image/*">
+                {% if item.image %}
+                    <div class="current-image mt-2">
+                        <p>Текущее изображение:</p>
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}" style="max-width: 300px;">
+                    </div>
+                    <div class="form-check mt-2">
+                        <input type="checkbox" id="clear_image" name="image-clear" class="form-check-input">
+                        <label for="clear_image" class="form-check-label">Удалить текущее изображение</label>
+                    </div>
+                {% endif %}
+                <img id="image-preview" src="#" alt="Предпросмотр" style="display: none; max-width: 300px; margin-top: 10px;">
+            </div>
+            <div class="form-text">
+                Добавьте фотографию предмета для лучшей идентификации.
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{% url 'item_detail' item.id %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image preview
+    const imageInput = document.getElementById('image-upload');
+    const imagePreview = document.getElementById('image-preview');
+    
+    if (imageInput && imagePreview) {
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.addEventListener('load', function() {
+                    imagePreview.src = this.result;
+                    imagePreview.style.display = 'block';
+                });
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Handle clear image checkbox
+    const clearCheckbox = document.getElementById('clear_image');
+    const currentImage = document.querySelector('.current-image');
+    
+    if (clearCheckbox && currentImage) {
+        clearCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                currentImage.style.opacity = '0.3';
+            } else {
+                currentImage.style.opacity = '1';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

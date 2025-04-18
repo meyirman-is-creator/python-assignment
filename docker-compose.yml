@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: lost_and_found_web
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+    depends_on:
+      - db
+      - minio
+    networks:
+      - lost_and_found_network
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 lost_and_found.wsgi:application"
+
+  db:
+    image: postgres:14
+    container_name: lost_and_found_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - lost_and_found_network
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: minio/minio
+    container_name: lost_and_found_minio
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - lost_and_found_network
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+
+  nginx:
+    build: ./nginx
+    container_name: lost_and_found_nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+      - minio
+    networks:
+      - lost_and_found_network
+    volumes:
+      - static_volume:/app/static
+
+networks:
+  lost_and_found_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+  static_volume:

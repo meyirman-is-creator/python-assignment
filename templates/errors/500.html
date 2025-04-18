@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ошибка сервера - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1 class="error-title">500</h1>
+        <h2 class="error-subtitle">Ошибка сервера</h2>
+        <p class="error-description">На сервере произошла ошибка. Мы уже работаем над её устранением.</p>
+        <div class="error-actions">
+            <a href="{% url 'home' %}" class="btn btn-primary">На главную</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Вернуться назад</a>
+        </div>
+    </div>
+    <div class="error-image">
+        <img src="{% static 'img/500.svg' %}" alt="500 Error" class="error-img">
+    </div>
+</div>
+{% endblock %}

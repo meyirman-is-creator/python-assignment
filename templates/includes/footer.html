@@ -1,0 +1,15 @@
+<footer class="footer">
+    <div class="container">
+        <div class="footer-links">
+            <a href="{% url 'home' %}" class="footer-link">Главная</a>
+            <a href="{% url 'about' %}" class="footer-link">О нас</a>
+            <a href="{% url 'faq' %}" class="footer-link">FAQ</a>
+            {% if user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="footer-link">Админ-панель</a>
+            {% endif %}
+        </div>
+        <div class="footer-text">
+            <p>&copy; {% now "Y" %} Lost and Found. Все права защищены.</p>
+        </div>
+    </div>
+</footer>

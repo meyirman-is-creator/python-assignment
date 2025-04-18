@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль - {{ user.username }} - Lost and Found{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h1 class="page-title">Профиль пользователя</h1>
+    
+    <div class="profile-card">
+        <div class="profile-info">
+            <h2>{{ user.get_full_name|default:user.username }}</h2>
+            <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
+        </div>
+    </div>
+    
+    <div class="profile-section mt-4">
+        <h3>Мои объявления</h3>
+        
+        <div class="items-container">
+            {% for item in user_items %}
+                <div class="card item-card">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-image">
+                    {% else %}
+                        <img src="{% static 'img/placeholder.jpg' %}" alt="No image" class="item-image">
+                    {% endif %}
+                    
+                    <div class="card-body item-details">
+                        <h3 class="card-title">{{ item.title }}</h3>
+                        <span class="badge badge-{{ item.status|lower }}">{{ item.get_status_display }}</span>
+                        
+                        <p class="card-text">{{ item.description|truncatewords:20 }}</p>
+                        
+                        <div class="item-meta">
+                            <p><strong>Категория:</strong> {{ item.category.name }}</p>
+                            <p><strong>Дата:</strong> {{ item.date_lost_found }}</p>
+                            <p><strong>Создано:</strong> {{ item.created_at|date:"d.m.Y" }}</p>
+                        </div>
+                        
+                        <div class="item-actions">
+                            <a href="{% url 'item_detail' item.id %}" class="btn btn-primary">Подробнее</a>
+                            <a href="{% url 'item_edit' item.id %}" class="btn btn-secondary">Редактировать</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <p>У вас пока нет объявлений</p>
+                    <a href="{% url 'item_create' %}" class="btn btn-primary mt-2">Разместить объявление</a>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if user_items %}
+            <div class="text-center mt-3">
+                <a href="{% url 'my_items' %}" class="btn btn-secondary">Все мои объявления</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="profile-section mt-4">
+        <h3>Мои заявки</h3>
+        
+        <div class="claims-list">
+            {% for claim in user_claims %}
+                <div class="claim-card">
+                    <div class="claim-header">
+                        <h4>Заявка на "{{ claim.item.title }}"</h4>
+                        {% if claim.is_approved %}
+                            <span class="badge badge-success">Одобрена</span>
+                        {% else %}
+                            <span class="badge badge-secondary">На рассмотрении</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="claim-body">
+                        <p><strong>Описание заявки:</strong> {{ claim.description }}</p>
+                        <p><strong>Контактная информация:</strong> {{ claim.contact_info }}</p>
+                        <p><strong>Дата заявки:</strong> {{ claim.created_at|date:"d.m.Y" }}</p>
+                    </div>
+                    
+                    <div class="claim-actions">
+                        <a href="{% url 'item_detail' claim.item.id %}" class="btn btn-primary btn-sm">Перейти к объявлению</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <p>У вас пока нет заявок на возврат вещей</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if user_claims %}
+            <div class="text-center mt-3">
+                <a href="{% url 'my_claims' %}" class="btn btn-secondary">Все мои заявки</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
