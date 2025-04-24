@@ -7,7 +7,7 @@ from django.db.models import Q, Count
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 
-from .models import Category, Location, Item, Claim, Comment, Notification, ItemStatus
+from .models import Category, Location, Item, Claim, Comment, Notification, ItemStatusEnum
 from .forms import ItemForm, LoginForm, RegistrationForm, ClaimForm, CommentForm
 
 
@@ -18,8 +18,8 @@ def home_view(request):
     # Статистика для отображения на главной странице
     stats = {
         'total_items': Item.objects.count(),
-        'lost_items': Item.objects.filter(status=ItemStatus.LOST).count(),
-        'found_items': Item.objects.filter(status=ItemStatus.FOUND).count(),
+        'lost_items': Item.objects.filter(status=ItemStatusEnum.LOST.value).count(),
+        'found_items': Item.objects.filter(status=ItemStatusEnum.FOUND.value).count(),
     }
     
     return render(request, 'pages/home.html', {
@@ -236,7 +236,7 @@ def claim_approve_view(request, pk):
         
         # Обновляем статус объявления
         item = claim.item
-        item.status = ItemStatus.CLAIMED if item.status == ItemStatus.LOST else ItemStatus.RETURNED
+        item.status = ItemStatusEnum.CLAIMED.value if item.status == ItemStatusEnum.LOST.value else ItemStatusEnum.RETURNED.value
         item.save()
         
         # Создаем уведомление для пользователя, создавшего заявку

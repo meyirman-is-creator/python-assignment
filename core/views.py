@@ -2,15 +2,18 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.authtoken.models import Token
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from django.contrib.auth import authenticate
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils import timezone
 from .models import Category, Location, Item, Claim, Comment, Notification
 from .serializers import (
     CategorySerializer, LocationSerializer, ItemSerializer, ItemDetailSerializer,
     ClaimSerializer, CommentSerializer, NotificationSerializer,
-    UserSerializer, UserRegistrationSerializer, UserLoginSerializer
+    UserSerializer, UserRegistrationSerializer, UserLoginSerializer,
+    GenericItemSerializer
 )
+from .profiling import profile_endpoint
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -20,6 +23,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
+    
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
 
 
 class LocationViewSet(viewsets.ModelViewSet):
@@ -29,27 +35,43 @@ class LocationViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'address']
     ordering_fields = ['name', 'created_at']
+    
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
 
 
 class ItemViewSet(viewsets.ModelViewSet):
-    queryset = Item.objects.all()
-    serializer_class = ItemSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description', 'category__name', 'location__name', 'status']
     ordering_fields = ['created_at', 'date_lost_found', 'title']
     
+    def get_queryset(self):
+        # Используем prefetch_related для решения проблемы N+1
+        return Item.objects.all().select_related(
+            'category', 'location', 'user'
+        ).prefetch_related(
+            'comments', 'claims'
+        )
+    
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return ItemDetailSerializer
+        elif self.action == 'create' and self.request.query_params.get('generic', False):
+            return GenericItemSerializer
         return ItemSerializer
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
     
     @action(detail=False, methods=['get'])
     def lost(self, request):
-        lost_items = Item.objects.filter(status='LOST')
+        lost_items = self.get_queryset().filter(status='LOST')
         page = self.paginate_queryset(lost_items)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -59,7 +81,7 @@ class ItemViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def found(self, request):
-        found_items = Item.objects.filter(status='FOUND')
+        found_items = self.get_queryset().filter(status='FOUND')
         page = self.paginate_queryset(found_items)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -69,7 +91,7 @@ class ItemViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        recent_items = Item.objects.all().order_by('-created_at')[:10]
+        recent_items = self.get_queryset().order_by('-created_at')[:10]
         serializer = self.get_serializer(recent_items, many=True)
         return Response(serializer.data)
     
@@ -77,19 +99,24 @@ class ItemViewSet(viewsets.ModelViewSet):
     def my_items(self, request):
         if not request.user.is_authenticated:
             return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-        my_items = Item.objects.filter(user=request.user)
+        my_items = self.get_queryset().filter(user=request.user)
         page = self.paginate_queryset(my_items)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(my_items, many=True)
         return Response(serializer.data)
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
 
 
 class ClaimViewSet(viewsets.ModelViewSet):
-    queryset = Claim.objects.all()
     serializer_class = ClaimSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return Claim.objects.all().select_related('item', 'user', 'item__category', 'item__location')
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -99,8 +126,8 @@ class ClaimViewSet(viewsets.ModelViewSet):
         if item.user != self.request.user:
             Notification.objects.create(
                 user=item.user,
-                title=f"New claim for your {item.title}",
-                message=f"User {self.request.user.username} has claimed your {item.get_status_display()} item: {item.title}",
+                title=f"Новая заявка на ваше объявление {item.title}",
+                message=f"Пользователь {self.request.user.username} подал заявку на ваше объявление: {item.title}",
                 related_item=item
             )
     
@@ -108,7 +135,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
     def approve(self, request, pk=None):
         claim = self.get_object()
         if request.user != claim.item.user:
-            return Response({"error": "Only the item owner can approve claims"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Только владелец объявления может одобрить заявку"}, status=status.HTTP_403_FORBIDDEN)
         
         claim.is_approved = True
         claim.save()
@@ -121,18 +148,23 @@ class ClaimViewSet(viewsets.ModelViewSet):
         # Create notification for claimer
         Notification.objects.create(
             user=claim.user,
-            title=f"Claim approved for {item.title}",
-            message=f"Your claim for {item.title} has been approved by the owner.",
+            title=f"Заявка одобрена для {item.title}",
+            message=f"Ваша заявка на объявление {item.title} была одобрена владельцем.",
             related_item=item
         )
         
-        return Response({"message": "Claim approved successfully"})
+        return Response({"message": "Заявка успешно одобрена"})
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    def get_queryset(self):
+        return Comment.objects.all().select_related('item', 'user')
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -142,10 +174,13 @@ class CommentViewSet(viewsets.ModelViewSet):
         if item.user != self.request.user:
             Notification.objects.create(
                 user=item.user,
-                title=f"New comment on your {item.title}",
-                message=f"User {self.request.user.username} has commented on your item: {item.title}",
+                title=f"Новый комментарий к вашему объявлению {item.title}",
+                message=f"Пользователь {self.request.user.username} оставил комментарий к вашему объявлению: {item.title}",
                 related_item=item
             )
+            
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
 
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -153,7 +188,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+        return Notification.objects.filter(user=self.request.user).select_related('related_item').order_by('-created_at')
     
     @action(detail=True, methods=['post'])
     def mark_read(self, request, pk=None):
@@ -167,6 +202,9 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         notifications = self.get_queryset()
         notifications.update(is_read=True)
         return Response({"message": "All notifications marked as read"})
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
 
 
 class UserViewSet(viewsets.GenericViewSet):
@@ -212,3 +250,87 @@ class UserViewSet(viewsets.GenericViewSet):
         except:
             pass
         return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
+
+
+# Generic Views для GET запросов (ListAPIView и RetrieveAPIView)
+class ItemListView(ListAPIView):
+    serializer_class = ItemSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'category__name', 'location__name', 'status']
+    ordering_fields = ['created_at', 'date_lost_found', 'title']
+    
+    def get_queryset(self):
+        return Item.objects.all().select_related(
+            'category', 'location', 'user'
+        )
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
+
+
+class ItemDetailView(RetrieveAPIView):
+    serializer_class = ItemDetailSerializer
+    
+    def get_queryset(self):
+        return Item.objects.all().select_related(
+            'category', 'location', 'user'
+        ).prefetch_related(
+            'comments__user', 'claims__user'
+        )
+        
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
+
+
+class LostItemsListView(ListAPIView):
+    serializer_class = ItemSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'category__name', 'location__name']
+    ordering_fields = ['created_at', 'date_lost_found', 'title']
+    
+    def get_queryset(self):
+        return Item.objects.filter(status='LOST').select_related(
+            'category', 'location', 'user'
+        )
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
+
+
+class FoundItemsListView(ListAPIView):
+    serializer_class = ItemSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'category__name', 'location__name']
+    ordering_fields = ['created_at', 'date_lost_found', 'title']
+    
+    def get_queryset(self):
+        return Item.objects.filter(status='FOUND').select_related(
+            'category', 'location', 'user'
+        )
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)
+
+
+class MyItemsListView(ListAPIView):
+    serializer_class = ItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'category__name', 'location__name', 'status']
+    ordering_fields = ['created_at', 'date_lost_found', 'title']
+    
+    def get_queryset(self):
+        return Item.objects.filter(user=self.request.user).select_related(
+            'category', 'location'
+        )
+        
+    def dispatch(self, request, *args, **kwargs):
+        return profile_endpoint(super().dispatch)(request, *args, **kwargs)

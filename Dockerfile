@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Установка необходимых системных пакетов, включая GraphViz
+RUN apt-get update && apt-get install -y graphviz && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Установка рабочей директории
 WORKDIR /app
 
